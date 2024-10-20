@@ -2,8 +2,13 @@
 #include <stack>
 #include <vector>
 #include <iomanip>
+#include <unistd.h>
 
 using namespace std;
+
+void clearScreen() {
+    cout << "\033[2J\033[1;1H";
+}
 
 void printStack(stack<int> s, int maxDisks) {
     vector<int> elements;
@@ -33,22 +38,36 @@ void printTowers(stack<int> towers[], int numTowers, int maxDisks) {
     cout << endl;
 }
 
-bool moveDisk(stack<int>& from, stack<int>& to) {
-    if (from.empty()) {
+bool moveDisk(stack<int>& source, stack<int>& to) {
+    if (source.empty()) {
         cout << "Invalid move: Source tower is empty!\n";
         return false;
-    } else if (!to.empty() && from.top() > to.top()) {
+    } else if (!to.empty() && source.top() > to.top()) {
         cout << "Invalid move: Cannot place larger disk on smaller disk!\n";
         return false;
     } else {
-        to.push(from.top());
-        from.pop();
+        to.push(source.top());
+        source.pop();
         return true;
     }
 }
 
 bool checkWin(stack<int> towers[], int numDisks, int targetTower) {
     return (towers[targetTower - 1].size() == numDisks);
+}
+
+void solveHanoi(int n, int source, int target, int aux, stack<int> towers[], int numDisks, int& moveCount) {
+    if (n == 0) return;
+    clearScreen();
+    printTowers(towers, 3, numDisks);
+    solveHanoi(n - 1, source, aux, target, towers, numDisks, moveCount);
+    moveDisk(towers[source], towers[target]);
+    moveCount++;
+    clearScreen();
+    printTowers(towers, 3, numDisks);
+    cout << "Move count: " << moveCount << endl;
+    usleep(1000000);
+    solveHanoi(n - 1, aux, target, source, towers, numDisks, moveCount);
 }
 
 int main() {
@@ -63,28 +82,40 @@ int main() {
         towers[0].push(i);
     }
 
-    int source, destination;
-    int moveCount = 0;
-    while (true) {
-        system("clear");
-        printTowers(towers, 3, numDisks);
-        
-        cout << "move count: " << moveCount << endl;
-        cout << "Enter move (e.g., 1 3 to move from Tower 1 to Tower 3): ";
-        cin >> source >> destination;
-        if (source < 1 || source > 3 || destination < 1 || destination > 3) {
-            cout << "Invalid input! Towers are numbered 1 to 3.\n";
-            continue;
-        }
+    char choice;
+    cout << "Do you want to solve the puzzle automatically (a) or play manually (m)? ";
+    cin >> choice;
 
-        if (moveDisk(towers[source - 1], towers[destination - 1])) {
-            moveCount++;
-            if (checkWin(towers, numDisks, 3)) {
-                printTowers(towers, 3, numDisks);
-                cout << "Congratulations! You solved the Tower of Hanoi puzzle in " << moveCount << " moves!\n";
-                break;
+    int moveCount = 0;
+    if (choice == 'a') {
+        solveHanoi(numDisks, 0, 2, 1, towers, numDisks, moveCount);
+    } else if (choice == 'm') {
+        int source, destination;
+        while (true) {
+            clearScreen();
+            printTowers(towers, 3, numDisks);
+            
+            cout << "Move count: " << moveCount << endl;
+            cout << "Enter move (e.g., 1 3 to move source Tower 1 to Tower 3): ";
+            cin >> source >> destination;
+            if (source < 1 || source > 3 || destination < 1 || destination > 3) {
+                cout << "Invalid input! Towers are numbered 1 to 3.\n";
+                continue;
+            }
+
+            if (moveDisk(towers[source - 1], towers[destination - 1])) {
+                moveCount++;
+                if (checkWin(towers, numDisks, 3)) {
+                    clearScreen();
+                    printTowers(towers, 3, numDisks);
+                    cout << "Congratulations! You solved the Tower of Hanoi puzzle in " << moveCount << " moves!\n";
+                    break;
+                }
             }
         }
+    } else {
+        cout << "Invalid choice! Exiting...\n";
     }
+
     return 0;
 }
