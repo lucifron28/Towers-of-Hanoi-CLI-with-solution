@@ -66,11 +66,12 @@ int main() {
     int source, destination;
     int moveCount = 0;
     while (true) {
+        system("clear");
         printTowers(towers, 3, numDisks);
         
+        cout << "move count: " << moveCount << endl;
         cout << "Enter move (e.g., 1 3 to move from Tower 1 to Tower 3): ";
         cin >> source >> destination;
-
         if (source < 1 || source > 3 || destination < 1 || destination > 3) {
             cout << "Invalid input! Towers are numbered 1 to 3.\n";
             continue;
